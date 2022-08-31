@@ -27,4 +27,13 @@ pub mod disk3 {
     ) -> Result<()> {
         image_init(ctx, file_md5, parent, arweave_key)
     }
+
+    pub fn init_video(
+        ctx: Context<NewVideo>,
+        file_md5: String,
+        parent: String,
+        arweave_key: String,
+    ) -> Result<()> {
+        video_init(ctx, file_md5, parent, arweave_key)
+    }
 }

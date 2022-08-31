@@ -57,8 +57,8 @@ impl File {
         8 +                         // 8  anchor pre
         1 +                         // 1  data_version
         PUBKEY_LEN +                // 32 owner
-        4 + 32 +                    // 10 * 4 name
-        4 + 43 // pubkeyString
+        4 + 32 +                    // 4 + 32 parent
+        4 + 43 // arweaveKey
     }
 }
 
@@ -85,7 +85,35 @@ impl Image {
         8 +                         // 8  anchor pre
         1 +                         // 1  data_version
         PUBKEY_LEN +                // 32 owner
-        4 + 32 +                    // 10 * 4 name
-        4 + 43 // pubkeyString
+        4 + 32 +                    // 4 + 32 parent
+        4 + 43 // arweaveKey
+    }
+}
+
+#[account]
+pub struct Video {
+    pub data_version: u8,
+    pub owner: Pubkey,
+    pub parent: String, // file, image, video, pubkeyString
+    pub arweave_key: String,
+}
+
+// fileMetadata
+// {
+//     fileName:
+//     fileMd5:
+//     fileType:
+//     fileSize:
+//     file:
+//     encrypted:
+// }
+
+impl Video {
+    pub fn space() -> usize {
+        8 +                         // 8  anchor pre
+        1 +                         // 1  data_version
+        PUBKEY_LEN +                // 32 owner
+        4 + 32 +                    // parent
+        4 + 43 // arweaveKey
     }
 }
