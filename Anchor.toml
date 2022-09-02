@@ -2,7 +2,7 @@
 seeds = false
 skip-lint = false
 [programs.devnet]
-disk3 = "Disk39nVau5sgCmr6oJuKdfg2Nc5VQpXgd5C4ztSt7Vd"
+disk3 = "disk7ooFCfjVoGxsjYBSxthgbEKJGRmaXbiFicyepGF"
 
 [registry]
 url = "https://api.apr.dev"

@@ -1,6 +1,6 @@
 [package]
 name = "disk3"
-version = "0.1.0"
+version = "0.2.0"
 description = "Created with Anchor"
 edition = "2021"
 
@@ -17,3 +17,5 @@ default = []
 
 [dependencies]
 anchor-lang = "0.25.0"
+byteorder = "1.4.3"
+solana-program = "1.10.38"
