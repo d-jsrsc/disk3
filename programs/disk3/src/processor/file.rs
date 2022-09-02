@@ -1,6 +1,13 @@
-use anchor_lang::prelude::*;
+use std::borrow::Borrow;
 
-use crate::state::{File, FILE_DATA_VERSION, FILE_SEED, Fold, FILE_FOLD, IMAGE_FOLD, VIDEO_FOLD};
+use anchor_lang::prelude::*;
+use solana_program::native_token::LAMPORTS_PER_SOL;
+
+use crate::{
+    state::{File, FILE_DATA_VERSION, FILE_SEED, Fold, FILE_FOLD, IMAGE_FOLD, VIDEO_FOLD},
+    error::NormalError,
+    utils::{transfer_fee, THE_AUTHOR_FEE}
+};
 
 #[derive(Accounts)]
 #[instruction(file_md5: String)]
@@ -13,7 +20,6 @@ pub struct NewFile<'info> {
         bump
     )]
     pub file: Account<'info, File>,
-
     /// CHECK: 
     #[account(mut)]
     pub parent: UncheckedAccount<'info>,
@@ -25,7 +31,7 @@ pub struct NewFile<'info> {
 }
 
 
-pub fn file_init(ctx: Context<NewFile>, _file_md5: String, arweave_key: String) -> Result<()>{
+pub fn file_init<'info>(ctx: Context<'_, '_, '_, 'info, NewFile<'info>>, _file_md5: String, arweave_key: String, encrypted: u8) -> Result<()>{
     let file = &mut ctx.accounts.file;
     // TODO assert owner is programID
 
@@ -33,9 +39,31 @@ pub fn file_init(ctx: Context<NewFile>, _file_md5: String, arweave_key: String) 
     file.owner = ctx.accounts.payer.to_account_info().key();
     file.parent = ctx.accounts.parent.to_account_info().key();
     file.arweave_key = arweave_key;
+    file.encrypted = encrypted;
+
+    let encrypted = encrypted == 1 || encrypted == 2;
+    if ctx.remaining_accounts.is_empty() == encrypted {
+        return err!(NormalError::FileEncryptedErr)
+    }
+
+
+    if !ctx.remaining_accounts.is_empty() {        
+        // https://stackoverflow.com/questions/72807527/is-it-possible-to-transfer-tokens-to-account-declared-in-remaining-accounts
+        let payer_account = &ctx.accounts.payer.to_account_info();
+        let the_author_account = &ctx.remaining_accounts[0];   
+
+        solana_program::program::invoke(&solana_program::system_instruction::transfer(
+            payer_account.key,
+            the_author_account.key,
+            THE_AUTHOR_FEE,
+        ), &[
+            payer_account.clone(),
+            the_author_account.clone(),
+        ])?;
+    }
+
 
     // if is parent is not root-fold 
-
     let fold_account_info = &ctx.accounts.parent.to_account_info();
     if fold_account_info.key.eq(&FILE_FOLD) || 
        fold_account_info.key.eq(&IMAGE_FOLD) || 

@@ -88,8 +88,6 @@ impl Fold {
         let counter: &[u8; 4] = &data[cursor..cursor + 4].try_into().unwrap(); // TODO
         let counter: u32 = u32::from_le_bytes(*counter);
 
-        msg!("counter {:?}", counter);
-
         Ok(Fold {
             data_version: FOLD_DATA_VERSION,
             owner,
@@ -100,12 +98,14 @@ impl Fold {
     }
 }
 
+// EncryptedEnum == 0: noEncrypted, 1: encryptedWithWallet, 2: encryptedCustom
 #[account]
 pub struct File {
     pub data_version: u8,
     pub owner: Pubkey,
     pub parent: Pubkey, // file, image, video, pubkeyString
     pub arweave_key: String,
+    pub encrypted: u8, // 0: noEncrypted, 1: encryptedWithWallet, 2: encryptedCustom
 }
 
 // fileMetadata
@@ -124,7 +124,8 @@ impl File {
         1 +                         // 1  data_version
         PUBKEY_LEN +                // 32 owner
         32 +                    // 32 parent
-        4 + 43 // arweaveKey
+        4 + 43 + // arweaveKey
+        1
     }
 }
 
@@ -134,6 +135,7 @@ pub struct Image {
     pub owner: Pubkey,
     pub parent: Pubkey, // file, image, video, pubkeyString
     pub arweave_key: String,
+    pub encrypted: u8,
 }
 
 // fileMetadata
@@ -152,7 +154,8 @@ impl Image {
         1 +                         // 1  data_version
         PUBKEY_LEN +                // 32 owner
         32 +                        // 32 parent
-        4 + 43 // arweaveKey
+        4 + 43 + // arweaveKey
+        1
     }
 }
 
@@ -162,6 +165,7 @@ pub struct Video {
     pub owner: Pubkey,
     pub parent: Pubkey, // file, image, video, pubkeyString
     pub arweave_key: String,
+    pub encrypted: u8,
 }
 
 // fileMetadata
@@ -180,6 +184,7 @@ impl Video {
         1 +                         // 1  data_version
         PUBKEY_LEN +                // 32 owner
         32 +                        // parent
-        4 + 43 // arweaveKey
+        4 + 43 + // arweaveKey
+        1
     }
 }

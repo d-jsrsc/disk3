@@ -1,8 +1,11 @@
+mod error;
 mod processor;
 mod state;
+mod utils;
 
 use anchor_lang::prelude::*;
 use processor::*;
+
 declare_id!("disk7ooFCfjVoGxsjYBSxthgbEKJGRmaXbiFicyepGF");
 
 #[program]
@@ -10,8 +13,13 @@ pub mod disk3 {
 
     use super::*;
 
-    pub fn init_file(ctx: Context<NewFile>, file_md5: String, arweave_key: String) -> Result<()> {
-        file_init(ctx, file_md5, arweave_key)
+    pub fn init_file<'info>(
+        ctx: Context<'_, '_, '_, 'info, NewFile<'info>>,
+        file_md5: String,
+        arweave_key: String,
+        encrypted: u8,
+    ) -> Result<()> {
+        file_init(ctx, file_md5, arweave_key, encrypted)
     }
 
     pub fn init_image(ctx: Context<NewImage>, file_md5: String, arweave_key: String) -> Result<()> {
