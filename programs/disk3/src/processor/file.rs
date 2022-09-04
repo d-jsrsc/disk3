@@ -1,12 +1,9 @@
-use std::borrow::Borrow;
-
-use anchor_lang::prelude::*;
-use solana_program::native_token::LAMPORTS_PER_SOL;
+use anchor_lang::{prelude::*, system_program};
 
 use crate::{
-    state::{File, FILE_DATA_VERSION, FILE_SEED, Fold, FILE_FOLD, IMAGE_FOLD, VIDEO_FOLD},
+    state::{File, FILE_DATA_VERSION, FILE_SEED},
     error::NormalError,
-    utils::{transfer_fee, THE_AUTHOR_FEE}
+    utils::{THE_AUTHOR_FEE, cmp_pubkeys, dec_fold_counter, inc_fold_counter}
 };
 
 #[derive(Accounts)]
@@ -20,7 +17,7 @@ pub struct NewFile<'info> {
         bump
     )]
     pub file: Account<'info, File>,
-    /// CHECK: 
+    /// CHECK: written
     #[account(mut)]
     pub parent: UncheckedAccount<'info>,
 
@@ -32,8 +29,11 @@ pub struct NewFile<'info> {
 
 
 pub fn file_init<'info>(ctx: Context<'_, '_, '_, 'info, NewFile<'info>>, _file_md5: String, arweave_key: String, encrypted: u8) -> Result<()>{
+    if !cmp_pubkeys(ctx.accounts.payer.owner, &system_program::ID) {
+        return err!(NormalError::OnlySystemAccountAllowed);
+    }
+
     let file = &mut ctx.accounts.file;
-    // TODO assert owner is programID
 
     file.data_version = FILE_DATA_VERSION;
     file.owner = ctx.accounts.payer.to_account_info().key();
@@ -45,7 +45,6 @@ pub fn file_init<'info>(ctx: Context<'_, '_, '_, 'info, NewFile<'info>>, _file_m
     if ctx.remaining_accounts.is_empty() == encrypted {
         return err!(NormalError::FileEncryptedErr)
     }
-
 
     if !ctx.remaining_accounts.is_empty() {        
         // https://stackoverflow.com/questions/72807527/is-it-possible-to-transfer-tokens-to-account-declared-in-remaining-accounts
@@ -61,19 +60,41 @@ pub fn file_init<'info>(ctx: Context<'_, '_, '_, 'info, NewFile<'info>>, _file_m
             the_author_account.clone(),
         ])?;
     }
-
-
-    // if is parent is not root-fold 
+    
     let fold_account_info = &ctx.accounts.parent.to_account_info();
-    if fold_account_info.key.eq(&FILE_FOLD) || 
-       fold_account_info.key.eq(&IMAGE_FOLD) || 
-       fold_account_info.key.eq(&VIDEO_FOLD) {
-        return Ok(())
-    }
-    let mut fold: Fold = Fold::from_account_info(fold_account_info)?;
-    fold.counter += 1;
-    let mut w = &mut fold_account_info.data.borrow_mut()[..];
-    fold.try_serialize(&mut w)?;
+    inc_fold_counter(fold_account_info)?;
+
+    Ok(())
+}
+
+
+#[derive(Accounts)]
+#[instruction(file_md5: String)]
+pub struct DelFile<'info> {
+    #[account( 
+        mut,
+        close = payer,
+        seeds = [FILE_SEED, file_md5.as_bytes(), parent.key().as_ref(), payer.key().as_ref()],
+        bump
+    )]
+    pub file: Account<'info, File>,
+    /// CHECK: 
+    #[account(mut)]
+    pub parent: UncheckedAccount<'info>,
+
+    #[account(mut)]
+    pub payer: Signer<'info>,
+    pub system_program: Program<'info, System>,
+}
+
+pub fn file_del(ctx: Context<DelFile>, _file_md5: String) -> Result<()> {
+    let file = &ctx.accounts.file;
+    if !cmp_pubkeys(&file.owner, ctx.accounts.payer.to_account_info().key) {
+        return err!(NormalError::IncurrentOwner);
+    };
+
+    let fold_account_info = &ctx.accounts.parent.to_account_info();
+    dec_fold_counter(fold_account_info)?;
 
     Ok(())
 }

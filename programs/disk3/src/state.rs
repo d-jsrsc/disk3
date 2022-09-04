@@ -3,8 +3,8 @@ use anchor_lang::{self, prelude::*};
 use byteorder::{ByteOrder, LittleEndian};
 
 const PUBKEY_LEN: usize = 32;
-const ARWEAVE_KEY_LEN: usize = 43;
-const UUID_LEN: usize = 32; // uuid without dash
+const _ARWEAVE_KEY_LEN: usize = 43;
+const _UUID_LEN: usize = 32; // uuid without dash
 
 pub const ROOT_FOLD_SEED: &[u8] = b"disk3-root-fold";
 pub const FOLD_SEED: &[u8] = b"disk3-fold";

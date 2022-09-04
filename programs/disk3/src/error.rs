@@ -12,4 +12,8 @@ pub enum NormalError {
     NumericalOverflowError,
     #[msg("NotEnoughSol")]
     NotEnoughSol,
+    #[msg("IncurrentOwner")]
+    IncurrentOwner,
+    #[msg("FoldNotEmpty")]
+    FoldNotEmpty,
 }

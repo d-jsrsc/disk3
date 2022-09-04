@@ -1,4 +1,3 @@
-use anchor_lang::accounts::system_account;
 use anchor_lang::prelude::*;
 use anchor_lang::solana_program::{
     account_info::AccountInfo,
@@ -8,6 +7,7 @@ use anchor_lang::solana_program::{
 use solana_program::native_token::LAMPORTS_PER_SOL;
 
 use crate::error::NormalError;
+use crate::state::{Fold, FILE_FOLD, IMAGE_FOLD, VIDEO_FOLD};
 
 pub const THE_AUTHOR: Pubkey =
     solana_program::pubkey!("Gcht9hSE5T9FvhpAeftRJVatwUU2aYfqNqCnS3tC3hyH");
@@ -17,13 +17,14 @@ pub fn cmp_pubkeys(a: &Pubkey, b: &Pubkey) -> bool {
     sol_memcmp(a.as_ref(), b.as_ref(), PUBKEY_BYTES) == 0
 }
 
-// pub fn assert_owned_by(account: &AccountInfo, owner: &Pubkey) -> Result<()> {
-//     if !cmp_pubkeys(account.owner, owner) {
-//         err!(BlogError::IncurrentOwner)
-//     } else {
-//         Ok(())
-//     }
-// }
+pub fn assert_owned_by(account: &AccountInfo, owner: &Pubkey) -> Result<()> {
+    msg!("{:?} {:?}", account.owner.to_string(), owner.to_string());
+    if !cmp_pubkeys(account.owner, owner) {
+        err!(NormalError::IncurrentOwner)
+    } else {
+        Ok(())
+    }
+}
 
 pub fn puffed_out_string(s: &str, size: usize) -> String {
     let mut array_of_zeroes = vec![];
@@ -43,27 +44,31 @@ pub fn puffed_out_string(s: &str, size: usize) -> String {
 //     }
 // }
 
-pub fn transfer_fee<'a>(payer: &'a AccountInfo, the_author: &'a AccountInfo) -> Result<()> {
-    if !cmp_pubkeys(&THE_AUTHOR, the_author.key) {
-        return err!(NormalError::OnlyAuthorAccountAllowed);
+pub fn inc_fold_counter(fold_account_info: &AccountInfo) -> Result<()> {
+    // if is parent is not root-fold
+    if fold_account_info.key.eq(&FILE_FOLD)
+        || fold_account_info.key.eq(&IMAGE_FOLD)
+        || fold_account_info.key.eq(&VIDEO_FOLD)
+    {
+        return Ok(());
     }
+    let mut fold: Fold = Fold::from_account_info(fold_account_info)?;
+    fold.counter += 1;
+    let mut w = &mut fold_account_info.data.borrow_mut()[..];
+    fold.try_serialize(&mut w)?;
+    Ok(())
+}
 
-    // solana_program::program::invoke(
-    //     &solana_program::system_instruction::transfer(payer.key, the_author.key, THE_AUTHOR_FEE),
-    //     &[payer.to_account_info(), the_author.to_account_info()],
-    // )?;
-
-    // **payer.try_borrow_mut_lamports()? = payer
-    //     .lamports()
-    //     .checked_sub(THE_AUTHOR_FEE)
-    //     .ok_or(NormalError::NotEnoughSol)?;
-
-    // **the_author.try_borrow_mut_lamports()? = the_author
-    //     .lamports()
-    //     .checked_add(THE_AUTHOR_FEE)
-    //     .ok_or(NormalError::NotEnoughSol)?;
-
-    // system_instruction::transfer(&from, &to, lamports_to_send);
-
+pub fn dec_fold_counter(fold_account_info: &AccountInfo) -> Result<()> {
+    if fold_account_info.key.eq(&FILE_FOLD)
+        || fold_account_info.key.eq(&IMAGE_FOLD)
+        || fold_account_info.key.eq(&VIDEO_FOLD)
+    {
+        return Ok(());
+    }
+    let mut fold: Fold = Fold::from_account_info(fold_account_info)?;
+    fold.counter -= 1;
+    let mut w = &mut fold_account_info.data.borrow_mut()[..];
+    fold.try_serialize(&mut w)?;
     Ok(())
 }
