@@ -13,7 +13,7 @@ export { Disk3 } from "../target/types/disk3";
 
 const idl = require("../target/idl/disk3.json");
 
-const env = "devnet";
+const env = "testnet";
 const connection = new Connection(clusterApiUrl(env));
 
 export async function initProgram(payerPath: string) {
@@ -31,9 +31,9 @@ export async function initProgram(payerPath: string) {
     new PublicKey(idl.metadata.address),
     provider
   ) as anchor.Program<Disk3>;
-  if (env === "devnet") {
-    // await connection.requestAirdrop(payer.publicKey, 2 * LAMPORTS_PER_SOL);
-  }
+  // if (env === "devnet") {
+  // await connection.requestAirdrop(payer.publicKey, 2 * LAMPORTS_PER_SOL);
+  // }
   let payerInfo = await connection.getAccountInfo(payer.publicKey);
   console.log(
     "payerInfo",

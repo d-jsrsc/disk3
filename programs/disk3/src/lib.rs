@@ -6,7 +6,7 @@ mod utils;
 use anchor_lang::prelude::*;
 use processor::*;
 
-declare_id!("disk7ooFCfjVoGxsjYBSxthgbEKJGRmaXbiFicyepGF");
+declare_id!("Disk39nVau5sgCmr6oJuKdfg2Nc5VQpXgd5C4ztSt7Vd");
 
 #[program]
 pub mod disk3 {

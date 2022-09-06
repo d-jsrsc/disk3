@@ -1,14 +1,14 @@
 [features]
 seeds = false
 skip-lint = false
-[programs.devnet]
-disk3 = "disk7ooFCfjVoGxsjYBSxthgbEKJGRmaXbiFicyepGF"
+[programs.testnet]
+disk3 = "Disk39nVau5sgCmr6oJuKdfg2Nc5VQpXgd5C4ztSt7Vd"
 
 [registry]
 url = "https://api.apr.dev"
 
 [provider]
-cluster = "devnet"
+cluster = "testnet"
 wallet = "/Users/ttang/.config/solana/id.json"
 
 [scripts]
